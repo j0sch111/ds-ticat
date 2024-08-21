@@ -1,0 +1,61 @@
+version: '3'
+
+networks:
+  app_network:
+    driver: bridge
+
+services:
+  lambda:
+    image: ds-lambda-endpoint:latest
+    build:
+      context: ../..
+      dockerfile: infrastructure/lambda/Dockerfile_lambda
+    ports:
+      - "8008:8080"
+    environment:
+      - PORT=8080
+    # volumes:
+    #   - ../../src:/app/src
+    #   - ../../data:/app/data
+    #   - ../../models:/app/model
+    #   - ../../pyproject.toml:/app/pyproject.toml
+    #   - ../lambda/lambda_handler.py:/app/src/lambda_handler.py
+    #   - ../lambda/lambda_flask_wrapper.py:/app/src/lambda_flask_wrapper.py
+    #   - ./utils/container_debug_utils:/app/container_debug_utils
+    networks:
+      - app_network
+
+  sagemaker:
+    image: ds-sagemaker-endpoint:latest
+    build:
+      context: ../..
+      dockerfile: infrastructure/sagemaker/Dockerfile_sagemaker
+    ports:
+      - "8009:8080"
+    environment:
+      - PORT=8080
+    # volumes:
+    #   - ../../src:/opt/ml/code
+    #   - ../../data:/opt/ml/input/data
+    #   - ../../models:/opt/ml/model
+    #   - ../../pyproject.toml:/opt/ml/pyproject.toml
+    #   - ../sagemaker:/opt/ml/code/sagemaker
+    #   - ./utils/container_debug_utils:/opt/ml/container_debug_utils
+    networks:
+      - app_network
+
+  integration-tests:
+    build:
+      context: ../..
+      dockerfile: infrastructure/containers/Dockerfile_IntegrationTests
+    # volumes:
+    #   - ../../test:/app/test
+    #   - ../../src:/app/src
+    environment:
+      - LAMBDA_URL=http://lambda:8080
+      - SAGEMAKER_URL=http://sagemaker:8080
+    depends_on:
+      - lambda
+      - sagemaker
+    networks:
+      - app_network

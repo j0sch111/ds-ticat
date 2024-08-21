@@ -1,0 +1,152 @@
+## Project Setup
+
+[project]
+name = "ticat"
+version = "0.1.0"
+description = "Classify Support Tickets into Categories"
+authors = [{name = "Data Science", email = "data@sevdesk.de"}]
+requires-python = "== 3.11"
+dependencies = []
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.pixi.project]
+channels = ["conda-forge"]
+platforms = [ "osx-arm64", "linux-64", "linux-aarch64"]
+
+[tool.pixi.feature.base.dependencies]
+python = "3.11"
+ipykernel = "*"
+xgboost = "*"
+scikit-learn = "*"
+
+[tool.pixi.feature.dev.dependencies]
+sagemaker-python-sdk = "*"
+jupyter = "*"
+scipy = "*"
+spacy = "*"
+numpy = "*"
+pandas = "*"
+transformers = "*"
+wandb = "*"
+
+[tool.pixi.feature.prod.dependencies]
+scipy = "*"
+spacy = "*"
+pandas = "*"
+
+[tool.pixi.feature.training.dependencies]
+mlflow = "*"
+wandb = "*"
+neptune = "*"
+
+[tool.pixi.feature.training.pypi-dependencies]
+comet_ml = "*"
+
+
+[tool.pixi.feature.lint.dependencies]
+black = ">=24"
+ruff = "*"
+pre-commit = "*"
+
+[tool.pixi.feature.test.dependencies]
+pytest = "*"
+requests = "*"
+
+[tool.pixi.feature.sagemaker.pypi-dependencies]
+sagemaker-training = "*"
+sagemaker-inference = "*"
+multi-model-server = "*"
+
+[tool.pixi.feature.lambda.pypi-dependencies]
+boto3 = "*"
+flask = "*"
+
+# Environments
+[tool.pixi.environments]
+default = { solve-group = "default" }
+dev = { features = ["dev", "training", "base"], solve-group = "default" }
+training = { features = ["training", "dev", "base"], solve-group = "default" }
+prod = { features = ["prod", "base"], solve-group = "default" }
+lint = { features = ["lint", "base"], solve-group = "default" }
+test = { features = ["test", "base"], solve-group = "default" }
+lambda = { features = ["lambda", "prod", "base"], solve-group = "default" }
+sagemaker = { features = ["sagemaker", "prod", "base"], solve-group = "default" }
+
+## Linting
+[tool.black]
+line-length = 120
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.ruff]
+line-length = 120
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
+
+[tool.ruff.lint]
+# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)
+select = ["E", "F", "W", "I", "N", "D", "UP", "C"]
+ignore = []
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+# Use single quotes for strings.
+quote-style = "double"
+
+# Indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Automatically detect the appropriate line ending.
+line-ending = "auto"

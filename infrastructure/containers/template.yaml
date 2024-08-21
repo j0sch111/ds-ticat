@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SAM Template for sentiment analysis Lambda function
+
+Resources:
+  SentimentAnalysisFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Architectures:
+        - arm64
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /analyze
+            Method: post
+    Metadata:
+      Dockerfile: ../lambda/Dockerfile_lambda
+      DockerContext: .
+      DockerTag: python3.11-v1
+
+Outputs:
+  SentimentAnalysisApi:
+    Description: "API Gateway endpoint URL for Prod stage"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/DEV/analyze/"

@@ -1,0 +1,41 @@
+# Use Amazon Linux 2023 as the base image
+ARG BASE_IMAGE=amazonlinux:2023
+ARG PIXI_VERSION=0.24.2
+
+# Builder stage
+FROM --platform=$TARGETPLATFORM ubuntu:24.04 AS builder
+ARG PIXI_VERSION
+
+# Install curl and download pixi
+RUN apt-get update && \
+    apt-get install -y curl && \
+    curl -Ls "https://github.com/prefix-dev/pixi/releases/download/v${PIXI_VERSION}/pixi-$(uname -m)-unknown-linux-musl" -o /pixi && \
+    chmod +x /pixi && \
+    /pixi --version
+
+# Main stage
+FROM --platform=$TARGETPLATFORM ${BASE_IMAGE}
+
+
+# Copy Pixi from builder stage
+COPY --from=builder --chown=root:root --chmod=0555 /pixi /usr/local/bin/pixi
+
+
+# Set working directory
+WORKDIR /app/
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
+COPY pyproject.toml ./
+COPY src src/
+COPY test/ test/
+COPY infrastructure/containers/utils/container_debug_utils/ container_debug_utils/
+
+# Install Python dependencies
+RUN pixi install -e test
+
+# Set the entrypoint
+ENTRYPOINT pixi run -e test pytest -s ./test/integration
+
+# Uncomment for debugging if needed
+#CMD ["tail", "-f", "/dev/null"]

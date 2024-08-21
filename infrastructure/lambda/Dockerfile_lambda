@@ -1,0 +1,62 @@
+# Use Amazon Linux 2023 as the base image
+ARG BASE_IMAGE=amazonlinux:2023
+ARG PIXI_VERSION=0.24.2
+ARG PACKAGE_NAME=ds_ticat
+
+
+# Builder stage
+FROM --platform=$TARGETPLATFORM ubuntu:24.04 AS builder
+ARG PIXI_VERSION
+
+# Install curl and download pixi
+RUN apt-get update && \
+    apt-get install -y curl && \
+    curl -Ls "https://github.com/prefix-dev/pixi/releases/download/v${PIXI_VERSION}/pixi-$(uname -m)-unknown-linux-musl" -o /pixi && \
+    chmod +x /pixi && \
+    /pixi --version
+
+# Main stage
+FROM  --platform=$TARGETPLATFORM ${BASE_IMAGE}
+
+# Redeclare the ARG so it's available in this stage
+ARG PACKAGE_NAME
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PACKAGE_NAME=${PACKAGE_NAME}
+ENV WORKDIR=/app
+
+ENV PYTHONPATH=${CODE_DIR}
+# Copy Pixi from builder stage
+COPY --from=builder --chown=root:root --chmod=0555 /pixi /usr/local/bin/pixi
+
+# Set working directory
+WORKDIR ${WORKDIR}
+ENV CODE_DIR=${WORKDIR}/code
+ENV MODEL_DIR=${WORKDIR}/model
+ENV DATA_DIR=${WORKDIR}/data
+
+RUN mkdir -p $CODE_DIR $MODEL_DIR $DATA_DIR
+
+# Install system dependencies
+RUN dnf update -y && \
+    dnf install -y which gcc && \
+    dnf clean all
+
+# Copy files
+COPY src/ ./src/
+COPY data/ data/
+COPY models/ model/
+COPY pyproject.toml ./
+COPY infrastructure/lambda/lambda_handler.py ./src/lambda_handler.py
+COPY infrastructure/lambda/lambda_flask_wrapper.py ./src/lambda_flask_wrapper.py
+COPY infrastructure/containers/utils/container_debug_utils/ ./container_debug_utils/
+
+# Install Python dependencies with Pixi
+RUN pixi install -e lambda
+
+# Set the entrypoint
+ENTRYPOINT pixi run -e lambda python3 $WORKDIR/src/lambda_flask_wrapper.py
+
+# Uncomment for debugging if needed
+#CMD ["tail", "-f", "/dev/null"]

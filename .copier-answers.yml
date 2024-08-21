@@ -1,0 +1,10 @@
+# Changes here will be overwritten by Copier
+_commit: 0.0.2
+_src_path: /home/j0sch111/github/ds-python-project-template
+camel_case: Ticat
+minimum_python_version: '3.11'
+package_name: ds_ticat
+project_description: Classify Support Tickets into Categories
+project_name: Ticat
+project_slug: ds-ticat
+project_version: 0.1.0

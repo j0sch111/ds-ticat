@@ -1,0 +1,11 @@
+{
+    "python.defaultInterpreterPath":  "/home/j0sch111/github/ds-ticat/.pixi/envs/dev/bin/python",
+    "jupyter.notebookFileRoot": "/home/j0sch111/github/ds-ticat",
+    "python.testing.pytestArgs": [
+        "test"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.languageServer": "Pylance",
+    "python.analysis.typeCheckingMode": "basic"
+}
